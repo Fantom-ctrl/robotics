@@ -1,0 +1,21 @@
+name: PR01 CI Check
+
+on: [push]
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04 
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Download course kit
+        run: |
+          mkdir -p .course-kit
+          curl -fLO https://ros.lms.ci.nsu.ru/downloads/robotics-course-kit-v1.tar.gz
+          tar -xzf robotics-course-kit-v1.tar.gz -C .course-kit
+
+      - name: Run practice checker
+        run: |
+          python3 .course-kit/v1/tools/check_practice.py PR01 --submission .
