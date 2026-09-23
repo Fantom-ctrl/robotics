@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "practice_id": "PR01",
+  "commit": "6a7b0a731347f8649040184dc11a6561927fdd0d",
+  "course_kit": {
+    "version": "v1-w03",
+    "archive_sha256": "7fbfd3e8161ab6c6ebefc7663efdaf77d9a7d490399743507f33dcefbd5ac522"
+  },
+  "commands": [
+    "export ROS_DOMAIN_ID=90",
+    "ros2 node list --no-daemon --spin-time 2",
+    "ros2 topic list -t",
+    "ros2 node info /turtlesim",
+    "ros2 topic type /turtle1/pose",
+    "ros2 topic echo /turtle1/pose --once",
+    "ros2 topic hz /turtle1/pose",
+    "export ROS_DOMAIN_ID=10",
+    "timeout 5s ros2 topic echo /turtle1/pose \"$POSE_TYPE\" --once > evidence/pr01/pose-broken.txt 2>&1",
+    "printf 'exit=%s\\n' \"$?\"",
+    "timeout 5s ros2 topic echo /turtle1/pose \"$POSE_TYPE\" --once > evidence/pr01/pose-fixed.txt 2>&1"
+  ],
+  "tests": [
+    {"name": "pose-topic-visibility", "status": "passed"}
+  ],  
+  "defect": {
+    "reproducer": "timeout 5s ros2 topic echo /turtle1/pose \"$POSE_TYPE\" --once — команда завершилась по таймауту с кодом 124, файл pose-broken.txt остался пустым, нода /turtlesim пропала из ros2 node list.",
+    "root_cause": "Переменная ROS_DOMAIN_ID была изменена с 90 на 10. В ROS 2 эта настройка изолирует сетевой трафик: ноды и CLI-инструменты видят друг друга только при совпадении Domain ID. Мой терминал перестал видеть ноды, продолжившие работать в домене 90, поэтому команда ожидания сообщения не получила данных и завершилась по таймауту.",
+    "proof_after": "timeout 5s ros2 topic echo /turtle1/pose \"$POSE_TYPE\" --once — команда успешно завершилась с кодом 0, в файле pose-fixed.txt получены координаты черепашки (x, y, theta), нода /turtlesim снова видна в ros2 node list."
+  },
+  "claims": {
+    "public_tests_passed": true,
+    "defect_reproduced": true,
+    "defect_fixed": true
+  },
+  "time": {
+    "contact_academic_hours": 2,
+    "self_study_hours": 5
+  },
+  "ai_used": true
+}
