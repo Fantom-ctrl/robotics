@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "practice_id": "PR03",
+  "commit": "0af0c3cad3ec7e08b6a177a4d800b0650fd0eefa",
+  "course_kit": {
+    "version": "v1-w03",
+    "archive_sha256": "7fbfd3e8161ab6c6ebefc7663efdaf77d9a7d490399743507f33dcefbd5ac522"
+  },
+  "commands": [
+    "ros2 pkg create --build-type ament_python --node-name patrol patrol --dependencies rclpy geometry_msgs",
+    "colcon build --symlink-install --packages-select patrol",
+    "ros2 run turtlesim turtlesim_node",
+    "ros2 run patrol patrol",
+    "ros2 topic info /cmd_vel --verbose",
+    "ros2 topic info /turtle1/cmd_vel --verbose",
+    "python3 -m pytest test",
+    "ros2 run patrol patrol --ros-args -r cmd_vel:=/turtle1/cmd_vel",
+    "ros2 topic hz /turtle1/cmd_vel --window 50",
+    "ros2 topic type /turtle1/pose"
+  ],
+  "tests": [
+    {"name": "package_builds_successfully", "status": "passed"},
+    {"name": "unit_tests_passed", "status": "passed"},
+    {"name": "turtlesim_node_starts", "status": "passed"},
+    {"name": "patrol_node_starts", "status": "passed"},
+    {"name": "remap_fixes_defect", "status": "passed"}
+  ],
+  "defect": {
+    "reproducer": "Запуск нод `ros2 run turtlesim turtlesim_node` и `ros2 run patrol patrol`. Ожидалось движение черепахи, но она оставалась неподвижной. Проверка `ros2 topic info /cmd_vel --verbose` показала 1 publisher и 0 subscribers, а `ros2 topic info /turtle1/cmd_vel --verbose` — 0 publishers и 1 subscriber.",
+    "root_cause": "В коде ноды `patrol` издатель был создан с относительным именем `cmd_vel`, что в пространстве имён ноды превратилось в `/patrol/cmd_vel`. Нода `turtlesim` при этом подписана на абсолютный топик `/turtle1/cmd_vel`. Из-за несовпадения имён топиков связь между publisher и subscriber не установилась.",
+    "proof_after": "Запуск ноды с remap: `ros2 run patrol patrol --ros-args -r cmd_vel:=/turtle1/cmd_vel`. После этого `ros2 topic info /turtle1/cmd_vel --verbose` показал 1 publisher и 1 subscriber. Черепаха начала двигаться по кругу, а `ros2 topic hz /turtle1/cmd_vel --window 50` зафиксировал частоту около 10 Hz."
+  },
+  "claims": {
+    "public_tests_passed": true,
+    "defect_reproduced": true,
+    "defect_fixed": true
+  },
+  "time": {
+    "contact_academic_hours": 2,
+    "self_study_hours": 5
+  },
+  "ai_used": true
+}

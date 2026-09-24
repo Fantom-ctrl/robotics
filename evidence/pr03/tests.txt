@@ -1,0 +1,56 @@
+ДЕФЕКТ
+---------------------------------------
+
+Команда: ros2 topic info /cmd_vel --verbose
+--------------------------------------------------
+Type: geometry_msgs/msg/Twist
+
+Publisher count: 1
+
+Node name: patrol
+Node namespace: /
+Topic type: geometry_msgs/msg/Twist
+Topic type hash: RIHS01_9c45bf16fe0983d80e3cfe750d6835843d265a9a6c46bd2e609fcddde6fb8d2a
+Endpoint type: PUBLISHER
+GID: 01.0f.eb.7d.9c.00.33.13.00.00.00.00.00.00.14.03
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): UNKNOWN
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Subscription count: 0
+
+
+Команда: ros2 topic info /turtle1/cmd_vel --verbose
+---------------------------------------------------------
+Type: geometry_msgs/msg/Twist
+
+Publisher count: 0
+
+Subscription count: 1
+
+Node name: turtlesim
+Node namespace: /
+Topic type: geometry_msgs/msg/Twist
+Topic type hash: RIHS01_9c45bf16fe0983d80e3cfe750d6835843d265a9a6c46bd2e609fcddde6fb8d2a
+Endpoint type: SUBSCRIPTION
+GID: 01.0f.eb.7d.33.00.5a.c9.00.00.00.00.00.00.1d.04
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): UNKNOWN
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+
+Что получилось?
+------------------------------------------------------------
+Черепаха стоит на месте. Причина заключается в несовпадении названий топиков: 
+нода patrol публикует сообщения в /cmd_vel, тогда как turtlesim подписан на /turtle1/cmd_vel. 
+В результате связь между узлами не устанавливается, и управляющие команды не поступают в симулятор.
