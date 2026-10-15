@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "practice_id": "PR06",
+  "commit": "f03c5e3f4c1bd5cbf96d8546a6c793811ed8a6b7 ",
+  "course_kit": {
+    "version": "v1-w06",
+    "archive_sha256": "6eda53e1c566f7f0a7e09d7afe1e5a6f3b98397175a7e57dede9a84c6d14d0fe"
+  },
+  "commands": [
+    "colcon build --symlink-install --packages-select course_description",
+    "xacro src/course_description/urdf/vehicle.urdf.xacro -o /tmp/vehicle.urdf",
+    "check_urdf /tmp/vehicle.urdf",
+    "ros2 launch course_description description.launch.py",
+    "ros2 run tf2_ros tf2_echo base_link lidar_link",
+    "ros2 run tf2_tools view_frames",
+    "colcon test --packages-select course_description"
+  ],
+  "tests": [
+    {"name": "test_xacro_expands", "status": "passed"},
+    {"name": "test_all_sensors_present", "status": "passed"},
+    {"name": "test_fixed_joints_have_origin", "status": "passed"}
+  ],
+  "defect": {
+    "reproducer": "В файле `urdf/vehicle.urdf.xacro` у соединения `lidar_joint` атрибут `parent` меняется с `base_link` на `camera_link`. После этого команда `colcon test --packages-select course_description` выдаёт провал теста `test_lidar_parent_is_base_link`. В RViz лидар визуально «приклеивается» к камере, а не к корпусу, и его положение в мире начинает зависеть от ориентации камеры.",
+    "root_cause": "По архитектуре модели все сенсоры должны монтироваться непосредственно к корпусу (`base_link`), а не друг к другу. Замена родителя на `camera_link` выстраивает цепочку `base_link → camera_link → lidar_link`, из-за чего трансформация лидара теперь вычисляется через камеру. Физически же лидар стоит на крыше и никак не связан с камерой. Утилита `check_urdf` такую ошибку не ловит: дерево остаётся связным и ацикличным, но геометрия модели становится неверной.",
+    "proof_after": "В `lidar_joint` возвращается корректное значение `parent=base_link`. Тест `test_lidar_parent_is_base_link` снова проходит успешно. Команда `ros2 run tf2_ros tf2_echo base_link lidar_link` выводит ожидаемые координаты лидара относительно корпуса. Полный прогон `colcon test` даёт зелёный отчёт, а `check_urdf` подтверждает структурную корректность URDF."
+  },
+  "claims": {
+    "public_tests_passed": true,
+    "defect_reproduced": true,
+    "defect_fixed": true
+  },
+  "time": {
+    "contact_academic_hours": 2,
+    "self_study_hours": 5
+  },
+  "ai_used": true
+}
